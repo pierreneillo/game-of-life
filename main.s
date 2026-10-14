@@ -9,14 +9,14 @@ lf:
 	.string "\n"
 
 timespec:
-	# Temps de sommeil (en s + ns)
+	# Sleep time (in s + ns)
 	.quad 0 # s
 	.quad 200000000 # ns
 
 screen_clear:
 	.string "\033[2J\033[H"
 	.data
-	# Pour stocker les adresses respectives des tableaux tab et buffer_tab
+	# To store the respective adresses of the `tab` and `buffer_tab` arrays
 tab:
 	.quad 0
 
@@ -96,19 +96,19 @@ display_line:
 
 copy:
 	# Copy the tab %rax into the tab %rbx
-	mov $0, %rcx # Compteur de tdb (i) <=> for (int i = 0;...
+	mov $0, %rcx # Loop counter (i) <=> for (int i = 0;...
 	.copy_loop:
 		movq (%rax,%rcx,8), %rdx
 		movq %rdx, (%rbx,%rcx,8)
 		inc %cl # <=> i++; ...
-		cmp N(%rip), %cl # i < N)
+		cmp N(%rip), %cl # <=> i < N)
 		jl .copy_loop
 	ret
 
 
 in_mat:
-	# Prend en paramètre (i,j) dans (%dil,%sil) et renvoie dans %rax si (i,j) est une position valide (0 = false, 1 = true)
-	# Registres modifiés:
+    # Takes (i,j) as parameters in (%dil, %sil) and returns in %rax 1 if (i,j) is a valid position, 0 otherwise
+	# Modified registers:
 	# rax
 	cmp $0, %dil
 	jl .in_mat_ret_0
@@ -125,8 +125,8 @@ in_mat:
 		ret
 
 get_val:
-	# Prend en paramètre (i,j) dans (%dil,%sil) et renvoie dans %rax la valeur de la case
-	# Registres modifiés:
+    # Takes (i,j) as parameters in (%dil, %sil) and returns in %rax the value of the cell
+	# Modified registers:
 	# rax - rdx
 	movq tab(%rip), %rax
 	movzbq %sil, %rcx
@@ -142,7 +142,7 @@ get_val:
 
 get_val_opt:
 	# Same as get_val, but checks if value is accessible first
-	# Registres modifiés:
+	# Modified registers
 	# rax - rdx
 	call in_mat
 	cmp $0, %rax
@@ -152,8 +152,8 @@ get_val_opt:
 		ret
 
 nb_voisines_vivantes:
-	# Prend en paramètre (i,j) dans (%dil,%sil) et renvoie dans %rax le nombre de voisines vivantes
-	# Registres modifiés:
+    # Takes (i,j) as parameters in (%dil, %sil) and returns in %rax the number of alive neighbouring cells
+	# Modified registers:
 	# rax - rdx, r8
 	xor %r8, %r8
 	.nbv_e1:
@@ -249,9 +249,9 @@ nb_voisines_vivantes:
 		ret
 
 set_val:
-	# Prend en paramètre (i,j) dans (%dil,%sil) et met cette case de buffer_tab à la valeur dans %rax
+    # Takes (i,j) as parameters in (%dil, %sil) and puts that cell of buffer_tab to the value in %rax
 	# Registres modifiés:
-
+	# None
 	mov buffer_tab(%rip), %rbx
 	movzbq %sil, %rsi
 	mov (%rbx,%rsi,8),%r8
@@ -270,10 +270,10 @@ set_val:
 		ret
 
 generation_case:
-	# Prend en paramètre (i,j) dans (%dil,%sil) et calcule la nouvelle valeur de la case
-	# à la génération suivante, la stocke dans le buffer
-	# LA VALIDITE DES INDICES EST SUPPOSEE
-	# Registres modifiés:
+    # Takes (i,j) as parameters in (%dil, %sil) and calculates the value of the cell
+	# at the next generation, stores it in the buffer
+	# INDEX VALIDITY IS ASSUMED
+	# Modified registers
 	# rax - rdx, r8
 	call nb_voisines_vivantes
 	movq %rax, %r8
@@ -290,8 +290,7 @@ generation_case:
 
 
 generation:
-	# Calculates a generation and outputs either zero or one in %rax, zero if there were changes, one if there were none	
-
+	# Calculates a generation and outputs either zero or one in %rax, zero if there were changes, one if there were none
 	mov $0, %sil
 	.for_sil:
 		mov $0, %dil
@@ -328,11 +327,11 @@ main:
 	mov %rax, tab(%rip)
 	
 	# Initialize tab
-	mov $0, %rcx # Compteur de tdb (i) <=> for (int i = 0;...
+	mov $0, %rcx # Loop counter (i) <=> for (int i = 0;...
 	.init_loop:
 		movq $0, (%rax,%rcx,8)
 		inc %cl # <=> i++; ...
-		cmp N(%rip), %cl # i < N)
+		cmp N(%rip), %cl # <=> i < N)
 		jl .init_loop
 
 	# Change table values
@@ -343,7 +342,7 @@ main:
 	inc %rcx
 	movq $7, (%rax, %rcx, 8)
 
-	# Planeur:
+	# Glider:
 
 	# .#...
 	# ..#..
